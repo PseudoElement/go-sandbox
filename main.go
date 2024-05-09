@@ -7,5 +7,10 @@ import (
 )
 
 func main() {
-	fmt.Println(funcs.MajorityElement([]int{1, 2, 3, 4, 5, 6, 7, 8, 6}))
+	fmt.Println(funcs.Merge(
+		[]int{1, 2, 3, 0, 0, 0},
+		3,
+		[]int{2, 5, 6},
+		3,
+	))
 }
