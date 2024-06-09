@@ -1,22 +1,32 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	r := mux.NewRouter()
+	api := r.PathPrefix("/api/v1").Subrouter()
 
-	r.HandleFunc("/books/{title}/page/{page}", func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		title := vars["title"]
-		page := vars["page"]
+	api.HandleFunc("/greeting", func(w http.ResponseWriter, r *http.Request) {
+		msg := struct {
+			Message string `json:"message"`
+		}{Message: "Server is alive!"}
 
-		fmt.Fprintf(w, "You've requested the book: %s on page %s\n", title, page)
-	})
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(msg)
+	}).Methods("GET")
 
-	http.ListenAndServe(":80", r)
+	methods := handlers.AllowedMethods([]string{"POST"})
+	ttl := handlers.MaxAge(3600)
+	origins := handlers.AllowedOrigins([]string{"*"})
+
+	fmt.Println("Listening port :8080")
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(methods, ttl, origins)(api)))
 }
