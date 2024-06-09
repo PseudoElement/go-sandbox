@@ -23,7 +23,7 @@ func main() {
 		json.NewEncoder(w).Encode(msg)
 	}).Methods("GET")
 
-	methods := handlers.AllowedMethods([]string{"POST"})
+	methods := handlers.AllowedMethods([]string{"POST", "GET"})
 	ttl := handlers.MaxAge(3600)
 	origins := handlers.AllowedOrigins([]string{"*"})
 
