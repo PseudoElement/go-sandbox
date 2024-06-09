@@ -27,6 +27,6 @@ func main() {
 	ttl := handlers.MaxAge(3600)
 	origins := handlers.AllowedOrigins([]string{"*"})
 
-	fmt.Println("Listening port :7080")
-	log.Fatal(http.ListenAndServe(":7080", handlers.CORS(methods, ttl, origins)(api)))
+	fmt.Println("Listening port :8080")
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(methods, ttl, origins)(api)))
 }
