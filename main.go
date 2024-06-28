@@ -78,7 +78,7 @@ import (
 // }
 
 func main() {
-	fmt.Println(funcs.AllCombsForNLengthArray(2))
+	fmt.Println(funcs.AllCombsForNLengthArray(4))
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
 
@@ -96,5 +96,5 @@ func main() {
 	origins := handlers.AllowedOrigins([]string{"*"})
 
 	fmt.Println("Listening port :8080")
-	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(methods, ttl, origins)(api)))
+	log.Fatal(http.ListenAndServe("8080", handlers.CORS(methods, ttl, origins)(api)))
 }
