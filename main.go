@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/pseudoelement/go-sandbox/funcs"
 )
 
 // func runProfiling() {
@@ -77,6 +78,7 @@ import (
 // }
 
 func main() {
+	fmt.Println(funcs.AllCombsForNLengthArray(2))
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
 
