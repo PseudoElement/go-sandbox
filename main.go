@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/pseudoelement/go-sandbox/comon/constants"
+	"github.com/pseudoelement/go-sandbox/common/constants"
 )
 
 // func runProfiling() {
