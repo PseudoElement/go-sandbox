@@ -8,7 +8,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/pseudoelement/go-sandbox/funcs"
+	"github.com/pseudoelement/go-sandbox/comon/constants"
 )
 
 // func runProfiling() {
@@ -78,7 +78,6 @@ import (
 // }
 
 func main() {
-	fmt.Println(funcs.AllCombsForNLengthArray(4))
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
 
@@ -90,6 +89,23 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(msg)
 	}).Methods("GET")
+
+	api.HandleFunc("/tonconnect/manifest/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		path, ok := constants.URL_TO_MANIFEST_PATH_MAP[id]
+		if !ok {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("Invalid environvent id!"))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		http.ServeFile(w, r, path)
+	})
+
+	api.HandleFunc("/tonconnect/logo.png", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		http.ServeFile(w, r, "./static/rubic-logo.png")
+	})
 
 	methods := handlers.AllowedMethods([]string{"POST", "GET"})
 	ttl := handlers.MaxAge(3600)
