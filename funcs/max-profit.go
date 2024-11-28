@@ -1,48 +1,24 @@
 package funcs
 
-import (
-	"slices"
-)
-
 func MaxProfit(prices []int) int {
-	// key - value
-	// value - index
-	order := make(map[int]int)
-	for i := 0; i < len(prices); i++ {
-		value := prices[i]
-		order[value] = i
+	if len(prices) == 0 {
+		return 0
 	}
 
-	slices.Sort(prices)
+	minPrice := prices[0]
+	maxProfit := 0
 
-	start := 0
-	end := len(prices) - 1
+	for _, price := range prices {
+		if price < minPrice {
+			minPrice = price // Update the minimum price
+			continue
+		}
 
-	profit := findMaxProfit(start, end, prices, order)
-
-	return profit
-}
-
-func findMaxProfit(start int, end int, sortedPrices []int, order map[int]int) int {
-	min := sortedPrices[start]
-	max := sortedPrices[end]
-	idxMin := order[min]
-	idxMax := order[max]
-
-	if idxMin < idxMax {
-		return max - min
+		profit := price - minPrice
+		if profit > maxProfit {
+			maxProfit = profit // Update the maximum profit
+		}
 	}
 
-	nextMin := sortedPrices[start+1]
-	nextDeltaMin := nextMin - min
-	nextMax := sortedPrices[end-1]
-	nextDeltaMax := max - nextMax
-
-	if nextDeltaMax > nextDeltaMin {
-		start++
-	} else {
-		end--
-	}
-
-	return findMaxProfit(start, end, sortedPrices, order)
+	return maxProfit
 }
