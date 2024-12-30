@@ -47,7 +47,7 @@ class ClassB {
 
 
 // task 3
-// sort order ->by num, if equals - then sort by word
+// sort order -> firstly by num, if equals - then sort by word
 const data = [
     {num: 3, word: 'zzzzzzz'},
     {num: 1, word: 'xxxxxxx'},
@@ -57,6 +57,10 @@ const data = [
     {num: 5, word: 'aaaaaa'},
 ]
 
+function sorter() {
+    // wriute implementation
+}
+
 // Answer:
 data.sort((a,b) => {
     const sortByNum = a.num - b.num;
@@ -64,3 +68,20 @@ data.sort((a,b) => {
     return sortByNum || sortByWord
 })
 console.log('DATA ====> ', data)
+
+// task 4
+// returns rejected or resolved promise
+function maybeThrowError() {
+    return new Promise((res, rej) => {
+        Math.random() > 0.5 
+            ? res('Hello, Abshishek.') 
+            : rej('More than 5.')
+    })
+}
+
+async function asyncCall() {
+    const value = await maybeThrowError()
+    console.log('Next code execution... Value is ', value)
+    // some logic...
+}
+asyncCall()
