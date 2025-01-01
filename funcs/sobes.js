@@ -8,6 +8,7 @@ function doSum(...nums) {
 }
 
 // task 1
+// Fix code, to see in terminal 'Sum is 6'
 const fetchNumbers = () => new Promise(res => 
     setTimeout(() => res([1, 2, 3]), 1_000)
 )
@@ -21,6 +22,9 @@ function functionCall() {
 // functionCall()
 
 // task 2
+// You need to call method doSum inside method doAnotherThing,
+// doAnotherThing takes 1 argument callback doSum method
+// Restriction: you need to call doAnotherThing method inside doThing method
 class ClassA {
     classB = new ClassB()
 
@@ -29,8 +33,8 @@ class ClassA {
     num3 = 3
 
     doThing() {
-        // const doSumBound = ...
-        // this.classB.doAnotherThing(callbackWithoutArgs)
+        // const doSumBound = 
+        return this.classB.doAnotherThing(doSumBound)
     }
 
     doSum(...args) {
@@ -44,6 +48,7 @@ class ClassB {
     }
 }
 
+console.log('ANSWER ===> ', new ClassA().doThing())
 
 
 // task 3
@@ -54,11 +59,12 @@ const data = [
     {num: 1, word: 'aaaaaaa'},
     {num: 5, word: 'bbbbbb'},
     {num: 5, word: 'cccccc'},
+    {num: 10, word: 'ddddddd'},
     {num: 5, word: 'aaaaaa'},
 ]
 
 function sorter() {
-    // wriute implementation
+    // write implementation
 }
 
 // Answer:
@@ -80,8 +86,8 @@ function maybeThrowError() {
 }
 
 async function asyncCall() {
-    const value = await maybeThrowError()
+    const value =  maybeThrowError()
     console.log('Next code execution... Value is ', value)
     // some logic...
 }
-asyncCall()
+// asyncCall()

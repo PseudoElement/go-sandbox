@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pseudoelement/go-sandbox/common/constants"
+	"github.com/pseudoelement/go-sandbox/funcs"
 )
 
 // func runProfiling() {
@@ -77,8 +78,16 @@ import (
 // 	}
 // }
 
+func isTestFuncs() bool {
+	return true
+}
+
 func main() {
-	// fmt.Println(funcs.MaxProfit(funcs.EXMPLE))
+	if isTestFuncs() {
+		funcs.MakeRequests()
+		return
+	}
+
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
 
