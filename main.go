@@ -78,15 +78,8 @@ import (
 // 	}
 // }
 
-func isTestFuncs() bool {
-	return true
-}
-
 func main() {
-	if isTestFuncs() {
-		funcs.MakeRequests()
-		return
-	}
+	funcs.WriteFile("Korben Detka")
 
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
