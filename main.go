@@ -79,7 +79,7 @@ import (
 // }
 
 func main() {
-	funcs.WriteFile("Korben Detka")
+	funcs.IsColRowKey("00_01_02_10_11_12_20_21_22", "1220")
 
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
