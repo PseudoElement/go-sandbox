@@ -9,11 +9,13 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pseudoelement/go-sandbox/common/constants"
-	"github.com/pseudoelement/go-sandbox/funcs"
+	iopack "github.com/pseudoelement/go-sandbox/io"
 )
 
 func main() {
-	funcs.IsColRowKey("00_01_02_10_11_12_20_21_22", "1220")
+	iopack.Grep()
+	// iopack.ReadFileWords()
+	// iopack.ScanFileWords()
 
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
