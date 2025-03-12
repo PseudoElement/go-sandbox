@@ -1,12 +1,53 @@
 package iopack
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 )
+
+type DotsReader struct {
+	text string
+}
+
+func NewDotsReader(text string) *DotsReader {
+	return &DotsReader{text}
+}
+
+func (r *DotsReader) Read(b []byte) (n int, err error) {
+	var count int
+	for i, char := range r.text {
+		if i > len(b) {
+			return count, io.EOF
+		}
+		if string(char) == "." {
+			b[count] = r.text[i]
+			count++
+		}
+	}
+
+	return count, io.EOF
+}
+
+func ReadBuffer() error {
+	emptyBuf := make([]byte, 1000)
+	fullBuf := []byte("Length is 10.")
+
+	var reader = bytes.NewReader(fullBuf)
+
+	// newBuf, err := io.ReadAll(reader)
+	// _, err := io.ReadFull(reader, emptyBuf)
+	_, err := reader.Read(emptyBuf)
+
+	log.Println("ReadBuffer_Empty ==> ", emptyBuf)
+	log.Println("ReadBuffer_Full ==> ", string(fullBuf))
+	log.Println("ReadBuffer_Error ==> ", err)
+
+	return err
+}
 
 func Grep() {
 	grepCmd := exec.Command("grep", "hello")

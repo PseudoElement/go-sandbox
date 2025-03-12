@@ -9,14 +9,9 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pseudoelement/go-sandbox/common/constants"
-	iopack "github.com/pseudoelement/go-sandbox/io"
 )
 
 func main() {
-	iopack.Grep()
-	// iopack.ReadFileWords()
-	// iopack.ScanFileWords()
-
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
 
@@ -51,5 +46,5 @@ func main() {
 	origins := handlers.AllowedOrigins([]string{"*"})
 
 	fmt.Println("Listening port :8080")
-	log.Fatal(http.ListenAndServe("8080", handlers.CORS(methods, ttl, origins)(api)))
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(methods, ttl, origins)(api)))
 }
