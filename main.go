@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pseudoelement/go-sandbox/common/constants"
+	"github.com/pseudoelement/go-sandbox/streaming"
 )
 
 func main() {
@@ -40,6 +41,9 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		http.ServeFile(w, r, "./static/rubic-logo.png")
 	})
+
+	stream := streaming.NewStreamingModule(api)
+	stream.SetRoutes()
 
 	methods := handlers.AllowedMethods([]string{"POST", "GET"})
 	ttl := handlers.MaxAge(3600)

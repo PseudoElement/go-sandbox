@@ -4,3 +4,7 @@ github.com/gorilla/handlers v1.5.2 h1:cLTUSsNkgcwhgRqvCNmdbRWG0A3N4F+M2nWKdScwyE
 github.com/gorilla/handlers v1.5.2/go.mod h1:dX+xVpaxdSw+q0Qek8SSsl3dfMk3jNddUkMzo0GtH0w=
 github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
 github.com/gorilla/mux v1.8.1/go.mod h1:AKf9I4AEqPTmMytcMc0KkNouC66V3BtZ4qD5fmWSiMQ=
+github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
+github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/pseudoelement/golang-utils v0.0.0-20250212220939-f9ba72920925 h1:pd5yV7Q1QHX/ly8UxE+8skjanl+l1f97xHNo0Vc1BPk=
+github.com/pseudoelement/golang-utils v0.0.0-20250212220939-f9ba72920925/go.mod h1:9CvGGpEt9lHnDVRS3V9J51vgFvL8JqcorzJDBReQA7E=
