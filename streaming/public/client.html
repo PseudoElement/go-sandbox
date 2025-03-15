@@ -6,30 +6,13 @@
     <title>Streaming</title>
 </head>
 <body>
+    <input id="quality" type="text">
+    <button onclick="loadChunks()">Load chunks</button>
     <button onclick="loadVideo()">Load video</button>
     <button onclick="fetchGreet()">Fetch json</button>
-    <video id="video-tag" controls style="margin-top: 10px;" width="700" height="500"></video>
+
+    <video id="video-tag" controls muted style="margin-top: 10px;" width="700" height="500"></video>
     
-
-    
-    <script>
-        const video = document.getElementById('video-tag')
-
-        function loadVideo() {
-            const socket = new WebSocket('ws://localhost:8080/api/v1/streaming/load-video?quality=144p&fileName=sea.mp4')
-            socket.onmessage = function(msg) {
-                console.log('Message => ', msg)
-            }
-        }
-
-        function fetchGreet() {
-            fetch(
-                "http://localhost:8080/api/v1/greeting",
-                {method: "GET", headers: {"Content-Type": "application/json"}}
-            ).then((res) => res.json())
-             .then(data => console.log('Fetch_resp ==> ', data))
-             .catch(err => console.log('Fetch_err ==> ', err)) 
-        }
-    </script>
+    <script type = "text/javascript" src="http://localhost:8080/api/v1/js/client.js"></script>
 </body>
 </html>
