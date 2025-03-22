@@ -2,7 +2,7 @@ package funcs
 
 import "math"
 
-func lengthOfLongestSubstring(s string) int {
+func LengthOfLongestSubstring(s string) int {
 	left := 0
 	maxLen := 0
 	set := NewSet()
