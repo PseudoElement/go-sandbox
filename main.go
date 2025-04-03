@@ -9,31 +9,18 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pseudoelement/go-sandbox/common/constants"
+	"github.com/pseudoelement/go-sandbox/funcs"
 	"github.com/pseudoelement/go-sandbox/streaming"
 )
 
-func mySplitAfterN(str string, sep string, n int) []string {
-	var matchCount int
-	var sub string
-	var s = make([]string, 0, 10)
-	for idx, char := range str {
-		sub += string(char)
-		if matchCount < n-1 {
-			if string(char) == sep {
-				matchCount++
-				s = append(s, sub)
-				sub = ""
-			}
-		} else {
-			s = append(s, str[idx:])
-			break
-		}
-	}
-
-	return s
-}
-
 func main() {
+	l := funcs.NewList(&funcs.ListNode{Val: 1, Next: nil})
+	l.Push(2)
+	l.Push(3)
+	l.Push(4)
+	l.Push(5)
+
+	log.Println("RoatateRight - ", funcs.RotateRight(l.Head(), 2))
 
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
