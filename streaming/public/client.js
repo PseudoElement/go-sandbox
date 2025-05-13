@@ -1,7 +1,11 @@
-const video = document.getElementById('video-tag')
+const video = document.getElementById('video-tag');
 const qualityInput = document.getElementById('quality')
 
+const CHUNKS_SIZE = 86
+let loadedChucnksNum = 0
 let chunks = []
+let timeoutId = null
+let videoTiming = 0;
 
 function checkValidQuality() {
   if (
@@ -30,13 +34,28 @@ function loadChunks() {
             socket.close()
         }
         socket.onmessage = async function (msg) {
-            chunks.push(msg.data)
-            const blob = new Blob(chunks, {type: 'mp4'})
+          chunks.push(msg.data)
+          
+          if (timeoutId) return;
 
-            console.log('Blob ==> ', msg.data)
-            console.log('Chunks ==> ', blob)
+          timeoutId = setTimeout(() => {
+                const blob = new Blob(chunks, {type: 'mp4'})
+
+                // console.log('Blob ==> ', msg.data)
+                // console.log('Chunks ==> ', blob)
+                console.log('video.currentTime ==> ', videoTiming)
+
+                videoTiming = video.currentTime
+
+                displayBlob(blob, video)
+
+                video.currentTime = videoTiming
+                video.play()
+                loadedChucnksNum++
+                timeoutId = null
+          }, 2_000)
+
             // can pass simply msg.data without `type: "mp4"` assignment
-            displayBlob(blob, video)
         };
 }
 
@@ -59,6 +78,7 @@ async function loadVideo() {
  */
 function displayBlob( blob, videoEl ) {
   const newObjectUrl = URL.createObjectURL( blob );
+  console.log('newObjectUrl ==> ', newObjectUrl);
   // const arr = [blob]
       
   // URLs created by `URL.createObjectURL` always use the `blob:` URI scheme: https://w3c.github.io/FileAPI/#dfn-createObjectURL

@@ -20,8 +20,6 @@ func main() {
 	l.Push(4)
 	l.Push(5)
 
-	log.Println("RoatateRight - ", funcs.RotateRight(l.Head(), 2))
-
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
 
