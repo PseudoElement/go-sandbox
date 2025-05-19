@@ -35,7 +35,7 @@ func UseAtomicPointerForStruct(itersCount int) {
 
 	wg.Wait()
 
-	fmt.Println("atomic pointer res - ", ptr.Load().Data)
+	fmt.Println("atomic pointer struct res - ", ptr.Load().Data)
 }
 
 func UseMutexForStruct(itersCount int) {
@@ -55,5 +55,40 @@ func UseMutexForStruct(itersCount int) {
 
 	wg.Wait()
 
-	fmt.Println("mutex res - ", ptr.Data)
+	fmt.Println("mutex struct res - ", ptr.Data)
+}
+
+func UseAtomicPointerForInt(itersCount int) {
+	var count atomic.Int32
+	var wg sync.WaitGroup
+	for range itersCount {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			count.Add(1)
+		}()
+	}
+
+	wg.Wait()
+
+	fmt.Println("atomic pointer int res - ", count.Load())
+}
+
+func UseMutexForInt(itersCount int) {
+	var count = 0
+	var wg sync.WaitGroup
+	var mu sync.RWMutex
+	for range itersCount {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			mu.Lock()
+			count++
+			mu.Unlock()
+		}()
+	}
+
+	wg.Wait()
+
+	fmt.Println("atomic pointer int res - ", count)
 }
