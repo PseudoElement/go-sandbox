@@ -14,11 +14,8 @@ import (
 )
 
 func main() {
-	l := funcs.NewList(&funcs.ListNode{Val: 1, Next: nil})
-	l.Push(2)
-	l.Push(3)
-	l.Push(4)
-	l.Push(5)
+	combs := funcs.Combine(4, 2)
+	log.Println("combs ==>", combs)
 
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
