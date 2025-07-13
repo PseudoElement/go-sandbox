@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -14,8 +15,7 @@ import (
 )
 
 func main() {
-	combs := funcs.Combine(4, 2)
-	log.Println("combs ==>", combs)
+	log.Println(funcs.LetterCombinations(os.Args[1]))
 
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
