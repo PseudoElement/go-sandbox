@@ -5,18 +5,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/pseudoelement/go-sandbox/common/constants"
-	"github.com/pseudoelement/go-sandbox/funcs"
 	"github.com/pseudoelement/go-sandbox/streaming"
 )
 
 func main() {
-	log.Println(funcs.LetterCombinations(os.Args[1]))
-
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
 
