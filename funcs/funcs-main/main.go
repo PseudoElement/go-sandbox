@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/pseudoelement/go-sandbox/funcs"
 )
 
 func main() {
-	fmt.Println(funcs.ReadBinaryWatch(2))
+	res := funcs.GetLastDecisions(funcs.Decisions_1, funcs.Decisions_2, 7)
+	log.Printf("res ==> %+v\n", res)
 }

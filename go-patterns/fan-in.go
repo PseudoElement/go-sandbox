@@ -56,7 +56,6 @@ func runFanIn() {
 				println(idx, " chan closed in main.")
 				close(ch)
 			}
-			// close(outCh)
 		}()
 
 		for {
