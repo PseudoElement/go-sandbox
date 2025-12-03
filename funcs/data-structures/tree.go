@@ -1,5 +1,42 @@
 package datastructures
 
+func TestTree() {
+	tree := NewHtmlTree()
+
+	node2 := NewTreeNode(2, "html-2")
+	node3 := NewTreeNode(3, "html-3")
+
+	tree.Root.AppendChild(node2)
+	tree.Root.AppendChild(node3)
+
+	node4 := NewTreeNode(4, "html-4")
+	node5 := NewTreeNode(5, "html-5")
+	node6 := NewTreeNode(6, "html-6")
+
+	node2.AppendChild(node4)
+	node2.AppendChild(node5)
+	node2.AppendChild(node6)
+
+	node7 := NewTreeNode(7, "html-7")
+	node8 := NewTreeNode(8, "html-8")
+	node9 := NewTreeNode(9, "html-9")
+
+	node4.AppendChild(node7)
+
+	node5.AppendChild(node8)
+	node5.AppendChild(node9)
+
+	node10 := NewTreeNode(10, "html-10")
+	node11 := NewTreeNode(11, "html-11")
+
+	node7.AppendChild(node10)
+	node7.AppendChild(node11)
+
+	// node, stepCount := tree.FindByIdDFSRecursive(tree.Root, "html-8", new(int))
+
+	// fmt.Printf("node %+v, stepCount %v\n", node, stepCount)
+}
+
 // TASK EXAMPLE
 // find all combinations on values in tree, which sum equals to n
 
