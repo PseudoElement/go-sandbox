@@ -56,7 +56,7 @@ func GetSquareKey(row int, col int, m map[string][]string) string {
 	colStr := strconv.Itoa(col)
 	rowStr := strconv.Itoa(row)
 	colRowStr := colStr + rowStr
-	for key, _ := range m {
+	for key := range m {
 		if IsColRowKey(key, colRowStr) {
 			return key
 		}
