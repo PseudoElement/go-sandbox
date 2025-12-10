@@ -82,8 +82,6 @@ func ReadFileWords() error {
 	}
 
 	for {
-		// time.Sleep(500 * time.Millisecond)
-
 		n, err := file.Read(buf)
 		fmt.Println("Read ==> ", n)
 
