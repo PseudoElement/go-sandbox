@@ -70,8 +70,7 @@ func Grep() {
 }
 
 func ReadFileWords() error {
-	// file, err := os.Open("/Users/paveldavidovich/desktop/web/backend/go-sandbox/io/stream-data.txt")
-	file, err := os.Open("/Users/paveldavidovich/desktop/web/backend/go-sandbox/io/test.txt")
+	file, err := os.Open("/Users/paveldavidovich/desktop/web/backend/go-sandbox/io/stream-data.txt")
 	defer file.Close()
 
 	// fileContent, err := os.ReadFile("./stream-data.txt")
