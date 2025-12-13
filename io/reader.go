@@ -74,6 +74,7 @@ func ReadFileWords() error {
 	defer file.Close()
 
 	// fileContent, err := os.ReadFile("./stream-data.txt")
+	// fileContent, err := os.ReadFile("./stream-data.txt")
 	buf := make([]byte, 20)
 
 	if err != nil {
