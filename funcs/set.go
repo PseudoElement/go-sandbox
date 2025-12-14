@@ -44,3 +44,23 @@ func (this *Set) Remove(val string) {
 func (this *Set) Log() {
 	log.Println(this.set)
 }
+
+func (this *Set) Size() int {
+	size := 0
+	for range this.set {
+		size++
+	}
+	return size
+}
+
+func (this *Set) ForEach(callback func(idx int, el string)) {
+	for idx, el := range this.set {
+		callback(idx, el)
+	}
+}
+
+func (this *Set) Pop() string {
+	poppedElement := this.set[len(this.set)-1]
+	this.set = this.set[0 : len(this.set)-1]
+	return poppedElement
+}
