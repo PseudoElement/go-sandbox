@@ -39,7 +39,7 @@ MainLoop:
 }
 
 // it check common prefix only from 0 index
-func longestCommonPrefix(strs []string) string {
+func LongestCommonPrefix(strs []string) string {
 	longest := ""
 
 	for _, str := range strs {
