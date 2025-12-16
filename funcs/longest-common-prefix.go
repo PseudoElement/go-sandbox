@@ -1,6 +1,7 @@
 package funcs
 
 // it checks common substring from any index
+// it checks common substring from any index
 func LongestCommonSubstring(strs []string) string {
 	longest := ""
 	commonLetters := Set{}
