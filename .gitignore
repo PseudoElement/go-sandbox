@@ -2,3 +2,4 @@ vendor
 /vendor
 ./vendor
 node_modules
+.vscode
