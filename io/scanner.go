@@ -11,11 +11,11 @@ import (
 
 func ScanFileWords() error {
 	file, err := os.Open("/Users/paveldavidovich/desktop/web/backend/go-sandbox/io/stream-data.txt")
-	defer file.Close()
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	scanner.Split(ScanNumbers)

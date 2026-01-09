@@ -1,32 +1,31 @@
 class StylishLog {
-    msg = ""
-    styles = ""
+  msg = "";
+  codes = "";
 
-    constructor(msg) {
-        this.msg = msg
-    }
+  // ANSI color codes
+  static colors = {
+    red: "\x1b[31m",
+    green: "\x1b[32m",
+    yellow: "\x1b[33m",
+    blue: "\x1b[34m",
+    purple: "\x1b[35m",
+    cyan: "\x1b[36m",
+    reset: "\x1b[0m",
+  };
 
-    log() {
-        console.log(`%c${this.msg}`, this.styles)
-        this.msg = null;
-        this.styles = null;
-    }
+  constructor(msg) {
+    this.msg = msg;
+  }
 
-    color(color) {
-        this.styles += `color: ${color || 'pink'}; `
-        return this
-    }
+  log() {
+    console.log(`${this.codes}${this.msg}${StylishLog.colors.reset}`);
+  }
 
-    fontSize(fs) {
-        this.styles += `font-size: ${fs || '20px'}; `
-        return this
-    }
-
-    textDecoration(td) {
-        this.styles += `text-decoration: ${td || 'none'}; `
-        return this
-    }
+  color(color) {
+    this.codes += StylishLog.colors[color] || StylishLog.colors.purple;
+    return this;
+  }
 }
 
-new StylishLog('Hello').color('purple').fontSize('40px').textDecoration('underline').log()
-new StylishLog('World').color('green').fontSize('40px').textDecoration('dotted').log()
+new StylishLog("Hello").color("cyan").log();
+new StylishLog("World").color("yellow").log();

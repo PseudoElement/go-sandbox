@@ -50,36 +50,39 @@ func ReadBuffer() error {
 }
 
 func Grep() {
-	grepCmd := exec.Command("grep", "hello")
+	grepCmd := exec.Command("grep", "-E", "good|bimba")
 
 	grepIn, _ := grepCmd.StdinPipe()
 	grepOut, _ := grepCmd.StdoutPipe()
 	grepErr, _ := grepCmd.StderrPipe()
 
 	grepCmd.Start()
-	grepIn.Write([]byte("hello grep\ngoodbye grep"))
-	grepErr.Close()
+	grepIn.Write([]byte("bimba grep ola amigo\ngoodbye grep\n"))
+	grepIn.Write([]byte("you suck\ngood morning"))
+
 	grepIn.Close()
+	defer grepErr.Close()
+	defer grepOut.Close()
 
 	grepBytes, _ := io.ReadAll(grepOut)
 	errBytes, _ := io.ReadAll(grepErr)
 	grepCmd.Wait()
 
-	fmt.Println("grepBytes ==> ", string(grepBytes))
+	fmt.Println("grepBytes ==>\n", string(grepBytes))
 	fmt.Println("errBytes ==>", string(errBytes))
 }
 
 func ReadFileWords() error {
 	file, err := os.Open("/Users/paveldavidovich/desktop/web/backend/go-sandbox/io/stream-data.txt")
+	if err != nil {
+		panic(err)
+	}
+
 	defer file.Close()
 
 	// fileContent, err := os.ReadFile("./stream-data.txt")
 	// fileContent, err := os.ReadFile("./stream-data.txt")
 	buf := make([]byte, 20)
-
-	if err != nil {
-		panic(err)
-	}
 
 	for {
 		n, err := file.Read(buf)
