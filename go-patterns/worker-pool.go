@@ -37,7 +37,7 @@ func runWorkerPool() {
 	}
 }
 
-func createWorkers(ch <-chan int, callback func(num int) int, workersCount int, ctx context.Context) chan WorkerResp {
+func createWorkers(ch <-chan int, callback func(num int) int, workersCount int, ctx context.Context) <-chan WorkerResp {
 	outChan := make(chan WorkerResp)
 	wg := &sync.WaitGroup{}
 	wg.Add(workersCount)

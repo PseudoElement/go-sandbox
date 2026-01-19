@@ -4,7 +4,7 @@ type MyQueue struct {
 	queue []int
 }
 
-func Constructor() MyQueue {
+func NewMyQueue() MyQueue {
 	return MyQueue{queue: make([]int, 0, 10)}
 }
 
