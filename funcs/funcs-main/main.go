@@ -2,10 +2,15 @@ package main
 
 import (
 	"log"
-
-	"github.com/pseudoelement/go-sandbox/funcs"
 )
 
 func main() {
-	log.Println("res -", funcs.ClimbStairs(35))
+	log.Println(int('9' - '0'))
+	log.Println(int('9' - '0'))
+	log.Println(int('1' - '0'))
 }
+
+// 0 -> 0
+// 1 -> 1
+// 2 -> 10
+// 3 ->
