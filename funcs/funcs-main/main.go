@@ -2,15 +2,18 @@ package main
 
 import (
 	"log"
+
+	"github.com/pseudoelement/go-sandbox/funcs"
 )
 
 func main() {
-	log.Println(int('9' - '0'))
-	log.Println(int('9' - '0'))
-	log.Println(int('1' - '0'))
+	res2 := funcs.Exist(
+		[][]byte{
+			{'A', 'A', 'A', 'A'},
+			{'A', 'A', 'A', 'A'},
+			{'A', 'A', 'A', 'A'},
+		},
+		"AAAAAAAAAAAAA",
+	)
+	log.Println("RES =>>", res2)
 }
-
-// 0 -> 0
-// 1 -> 1
-// 2 -> 10
-// 3 ->
