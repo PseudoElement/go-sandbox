@@ -7,8 +7,6 @@ import (
 	"github.com/pseudoelement/go-sandbox/unsafe/dir2"
 )
 
-// var
-
 func main() {
 	dir1.Init()
 	dir2.Init()

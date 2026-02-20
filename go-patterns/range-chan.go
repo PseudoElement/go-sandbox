@@ -31,11 +31,12 @@ func rangeBufferedChan() {
 	queue <- "three"
 
 	go func() {
-		time.Sleep(1 * time.Second)
 		queue <- "last"
-		time.Sleep(2 * time.Second)
 		queue <- "last"
-		time.Sleep(1 * time.Second)
+		queue <- "last"
+		queue <- "last"
+		queue <- "last"
+		queue <- "last"
 		queue <- "last"
 		close(queue)
 	}()

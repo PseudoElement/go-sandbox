@@ -1,8 +1,8 @@
 package main
 
 func main() {
-	runWorkerPool()
+	// runWorkerPool()
 	// runFanIn()
 	// rangeSimpleChan()
-	// rangeBufferedChan()
+	rangeBufferedChan()
 }
