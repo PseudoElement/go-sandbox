@@ -4,5 +4,6 @@ func main() {
 	// runWorkerPool()
 	// runFanIn()
 	// rangeSimpleChan()
-	rangeBufferedChan()
+	// rangeBufferedChan()
+	runWPool()
 }
