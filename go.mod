@@ -9,7 +9,10 @@ require (
 	github.com/gorilla/mux v1.8.1
 )
 
-require golang.org/x/sync v0.19.0 // indirect
+require (
+	github.com/klauspost/compress v1.18.6 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+)
 
 require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
