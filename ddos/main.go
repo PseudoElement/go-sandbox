@@ -89,7 +89,7 @@ func ddos(workersCount int) {
 	atomCount := atomic.Uint32{}
 	atomCount.Store(0)
 
-	t := time.NewTicker(1 * time.Minute)
+	t := time.NewTicker(2 * time.Minute)
 	for {
 		for range workersCount {
 			atomCount.Add(1)
@@ -101,5 +101,5 @@ func ddos(workersCount int) {
 }
 
 func main() {
-	ddos(1000)
+	ddos(300)
 }
