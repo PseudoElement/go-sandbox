@@ -92,17 +92,8 @@ func ddos(workersCount int) {
 	t := time.NewTicker(1 * time.Minute)
 	for {
 		for range workersCount {
-			for range 1000 {
-				atomCount.Add(1)
-				go func() {
-					err := apiCall()
-					if err != nil {
-						log.Println("ddos_ERROR:", err)
-						return
-					}
-
-				}()
-			}
+			atomCount.Add(1)
+			go apiCall()
 		}
 		log.Println("api called ", atomCount.Load(), " times.")
 		<-t.C
@@ -110,5 +101,5 @@ func ddos(workersCount int) {
 }
 
 func main() {
-	ddos(1)
+	ddos(1000)
 }
