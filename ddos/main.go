@@ -101,5 +101,5 @@ func ddos(workersCount int) {
 }
 
 func main() {
-	ddos(300)
+	ddos(1000)
 }
