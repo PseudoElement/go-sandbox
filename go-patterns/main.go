@@ -5,5 +5,6 @@ func main() {
 	// runFanIn()
 	// rangeSimpleChan()
 	// rangeBufferedChan()
-	runWPool()
+	// runWPool()
+	pipePromises()
 }
