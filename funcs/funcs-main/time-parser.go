@@ -11,6 +11,7 @@ import (
 
 var (
 	InvalidTokenType = errors.New("invalid token type")
+	UnknownTimeUnit  = errors.New("unknown time unit")
 )
 
 type TokenType = int8
@@ -33,9 +34,11 @@ const (
 )
 
 type Token struct {
-	FromIdx int
-	ToIdx   int
-	Type    int8
+	FromIdx  int
+	ToIdx    int
+	Type     int8
+	Value    string
+	TypeFunc func(char rune) bool
 }
 
 func tokenizeLayout(layout string) ([]Token, error) {
@@ -47,18 +50,30 @@ func tokenizeLayout(layout string) ([]Token, error) {
 	for idx, currUtf8Code := range layout {
 		if idx == 0 || sameAsPrevious(currUtf8Code, prevUtf8Code) {
 			tokenValue += string(currUtf8Code)
+			if idx == 0 {
+				fn, err := defineTokenTypeFunc(currUtf8Code)
+				if err != nil {
+					return []Token{}, err
+				}
+				token.TypeFunc = fn
+			}
 		} else {
 			token.ToIdx = idx - 1
 			tokenType, err := defineTokenType(tokenValue)
 			if err != nil {
 				return []Token{}, err
 			}
-			// token.Value = tokenValue
+			token.Value = tokenValue
 			token.Type = tokenType
 			tokens = append(tokens, token)
 			// next token generation
 			tokenValue = string(currUtf8Code)
 			token = Token{FromIdx: idx}
+			fn, err := defineTokenTypeFunc(currUtf8Code)
+			if err != nil {
+				return []Token{}, err
+			}
+			token.TypeFunc = fn
 		}
 
 		// handle last token in the end of layoutString
@@ -68,7 +83,7 @@ func tokenizeLayout(layout string) ([]Token, error) {
 			if err != nil {
 				return []Token{}, err
 			}
-			// token.Value = tokenValue
+			token.Value = tokenValue
 			token.Type = tokenType
 			tokens = append(tokens, token)
 		}
@@ -85,75 +100,110 @@ func parseTimeString(layout string, timeString string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	m := make(map[TokenType]int, len(tokens))
-	var timezone *time.Location
-	var month time.Month
-	for _, token := range tokens {
-		if token.Type == Separator {
-			continue
+	m := make(map[TokenType]any, len(tokens))
+	var tokenIdx int
+	var timeUnitValue string
+	for idx, char := range timeString {
+		token := tokens[tokenIdx]
+		sameTimeUnit := token.TypeFunc(char)
+		if sameTimeUnit {
+			timeUnitValue += string(char)
+		} else {
+			/* handle previous accumulated timeUnitValue */
+			if token.Type != Separator {
+				timeUnit, tokenType, err := defineTimeUnit(token, timeUnitValue)
+				if err != nil {
+					return time.Time{}, err
+				}
+				m[tokenType] = timeUnit
+			}
+			/* start handling next */
+			tokenIdx++
+			timeUnitValue = string(char)
 		}
 
-		switch token.Type {
-		case Year:
-			year, err := strconv.Atoi(timeString[token.FromIdx : token.ToIdx+1])
+		// handle last token in the end of layoutString
+		if utf8.RuneCountInString(timeString)-1 == idx {
+			timeUnit, tokenType, err := defineTimeUnit(token, timeUnitValue)
 			if err != nil {
 				return time.Time{}, err
 			}
-			m[Year] = year
-		case Sec:
-			sec, err := strconv.Atoi(timeString[token.FromIdx : token.ToIdx+1])
-			if err != nil {
-				return time.Time{}, err
-			}
-			m[Sec] = sec
-		case Min:
-			min, err := strconv.Atoi(timeString[token.FromIdx : token.ToIdx+1])
-			if err != nil {
-				return time.Time{}, err
-			}
-			m[Min] = min
-		case Hour:
-			hour, err := strconv.Atoi(timeString[token.FromIdx : token.ToIdx+1])
-			if err != nil {
-				return time.Time{}, err
-			}
-			m[Hour] = hour
-		case Day:
-			utf8Code, _ := utf8.DecodeRune([]byte{timeString[token.FromIdx : token.ToIdx+1][0]})
-			if isNumeric(utf8Code) {
-				day, err := strconv.Atoi(timeString[token.FromIdx : token.ToIdx+1])
-				if err != nil {
-					return time.Time{}, err
-				}
-				m[Day] = day
-			} else {
-				m[Day] = dayToNumeric(timeString[token.FromIdx : token.ToIdx+1])
-			}
-		case Month:
-			utf8Code, _ := utf8.DecodeRune([]byte{timeString[token.FromIdx : token.ToIdx+1][0]})
-			if isNumeric(utf8Code) {
-				monthVal, err := strconv.Atoi(timeString[token.FromIdx : token.ToIdx+1])
-				if err != nil {
-					return time.Time{}, err
-				}
-				month = time.Month(monthVal)
-			} else {
-				month = time.Month(monthToNumeric(timeString[token.FromIdx : token.ToIdx+1]))
-			}
-		case Timezone:
-			tz, err := time.LoadLocation(timeString[token.FromIdx : token.ToIdx+1])
-			if err != nil {
-				return time.Time{}, err
-			}
-			timezone = tz
+			m[tokenType] = timeUnit
 		}
 	}
-	log.Println("MAP", m)
-	log.Println("Month", month)
 
-	t := time.Date(m[Year], month, m[Day], m[Hour], m[Min], m[Sec], 1000, timezone)
+	log.Println("MAP", m)
+	t := time.Date(
+		m[Year].(int),
+		m[Month].(time.Month),
+		m[Day].(int),
+		m[Hour].(int),
+		m[Min].(int),
+		m[Sec].(int),
+		1000,
+		m[Timezone].(*time.Location),
+	)
 
 	return t, nil
+}
+
+func defineTimeUnit(token Token, timeUnitValue string) (any, TokenType, error) {
+	switch token.Type {
+	case Year:
+		year, err := strconv.Atoi(timeUnitValue)
+		if err != nil {
+			return nil, 0, err
+		}
+		return year, Year, nil
+	case Sec:
+		sec, err := strconv.Atoi(timeUnitValue)
+		if err != nil {
+			return nil, 0, err
+		}
+		return sec, Sec, nil
+	case Min:
+		min, err := strconv.Atoi(timeUnitValue)
+		if err != nil {
+			return nil, 0, err
+		}
+		return min, Min, nil
+	case Hour:
+		hour, err := strconv.Atoi(timeUnitValue)
+		if err != nil {
+			return nil, 0, err
+		}
+		return hour, Hour, nil
+	case Day:
+		utf8Code, _ := utf8.DecodeRune([]byte{timeUnitValue[0]})
+		if isNumeric(utf8Code) {
+			day, err := strconv.Atoi(timeUnitValue)
+			if err != nil {
+				return nil, 0, err
+			}
+			return day, Day, nil
+		} else {
+			return dayToNumeric(timeUnitValue), Day, nil
+		}
+	case Month:
+		utf8Code, _ := utf8.DecodeRune([]byte{timeUnitValue[0]})
+		if isNumeric(utf8Code) {
+			monthVal, err := strconv.Atoi(timeUnitValue)
+			if err != nil {
+				return nil, 0, err
+			}
+			return time.Month(monthVal), Month, nil
+		} else {
+			return time.Month(monthToNumeric(timeUnitValue)), Month, nil
+		}
+	case Timezone:
+		tz, err := time.LoadLocation(timeUnitValue)
+		if err != nil {
+			return nil, 0, err
+		}
+		return tz, Timezone, nil
+	default:
+		return nil, 0, UnknownTimeUnit
+	}
 }
 
 func dayToNumeric(day string) int {
@@ -164,6 +214,7 @@ func dayToNumeric(day string) int {
 	}
 	return 0
 }
+
 func monthToNumeric(month string) int {
 	for idx, val := range MonthValues {
 		if month == val {
@@ -245,4 +296,17 @@ func defineTokenType(tokenValue string) (TokenType, error) {
 	}
 
 	return 0, InvalidTokenType
+}
+
+func defineTokenTypeFunc(anyCharOfToken rune) (func(char rune) bool, error) {
+	if isAlpha(anyCharOfToken) {
+		return isAlpha, nil
+	}
+	if isNumeric(anyCharOfToken) {
+		return isNumeric, nil
+	}
+	if isSeparator(anyCharOfToken) {
+		return isSeparator, nil
+	}
+	return nil, InvalidTokenType
 }

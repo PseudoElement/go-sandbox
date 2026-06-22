@@ -5,9 +5,9 @@ import (
 )
 
 func main() {
-	// tokens, err := tokenizeLayout("2006-01-02 15:04:05 MST")
-	// tokens, err := tokenizeLayout("02-01-06 15:04")
-	t, err := parseTimeString("2006-01-02 15:04:05 MST", "2008-02-03 17:18:19 MST")
+	t, err := parseTimeString("02.01.06 15:04:05 MST", "11.12.98 22:11:59 MST")
+	// t, err := parseTimeString("2006-01-02 15:04:05 MST", "2008-02-03 17:18:19 MST")
+	// t, err := parseTimeString("Jun 2, 2006 15::04::05 MST", "Dec 23, 2004 21::15::15 MST")
 	log.Println("err: ", err)
 	log.Println("year: ", t.Year())
 	log.Println("month: ", t.Month())
@@ -16,9 +16,4 @@ func main() {
 	log.Println("min: ", t.Minute())
 	log.Println("sec: ", t.Second())
 	log.Println("location: ", t.Location().String())
-	// for idx, char := range " .-:,;" {
-	// 	log.Println(idx, " utf8 code - ", char)
-	// 	log.Println(idx, " utf8 string - ", string(char))
-	// 	log.Println("========")
-	// }
 }
