@@ -5,13 +5,10 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	github.com/golang/protobuf v1.5.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/klauspost/compress v1.18.6
 )
-
-require google.golang.org/protobuf v1.36.11 // indirect
 
 require (
 	github.com/felixge/httpsnoop v1.0.3 // indirect
