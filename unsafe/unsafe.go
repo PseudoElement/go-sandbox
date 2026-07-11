@@ -21,7 +21,7 @@ func main() {
 
 	makeCallFn := (*func(value string) *HexString)(fnPtr)
 
-	hexStr1 := (*makeCallFn)("0x2210F8De2F3406Aa38e7388C176B5e5C9b8352E8")
+	hexStr1 := (*makeCallFn)("0x2210F8De2F3406Aa38e7388C176B5e5C9b8352E9")
 	hexStr2 := (*makeCallFn)("2210F8De2F3406Aa38e7388C176B5e5C9b8352E8")
 
 	println("hexStr1", hexStr1.Value(), hexStr1.Valid())
