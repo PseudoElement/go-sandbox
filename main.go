@@ -12,7 +12,6 @@ import (
 	"github.com/pseudoelement/go-sandbox/streaming"
 )
 
-// comment
 func main() {
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
