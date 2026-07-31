@@ -6,5 +6,5 @@ func main() {
 	// rangeSimpleChan()
 	// rangeBufferedChan()
 	// runWPool()
-	pipePromises()
+	// pipePromises()
 }

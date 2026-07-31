@@ -9,7 +9,8 @@ import (
 )
 
 func main() {
-	batchReqs([]string{"localhost:8080", "146.124.34.19:8081"}, []byte(""))
+	// fanOut()
+	// customMutex()
 }
 
 func doRequest(ctx context.Context, addr string, request []byte) ([]byte, error) {

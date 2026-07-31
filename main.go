@@ -1,17 +1,8 @@
 package main
 
-import (
-	"bytes"
-	"context"
-	"io"
-	"net/http"
-	"sync"
-)
-
 func main() {
-	println("jell")
-}
 
+}
 
 // func main() {
 // 	r := mux.NewRouter()

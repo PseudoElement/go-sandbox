@@ -16,7 +16,6 @@ func fanIn(ctx context.Context, chans []chan int) chan int {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-
 				for {
 					select {
 					case <-ctx.Done():
@@ -24,6 +23,7 @@ func fanIn(ctx context.Context, chans []chan int) chan int {
 						return
 					case v, ok := <-ch:
 						if !ok {
+							fmt.Println("<-ch is closed.")
 							return
 						}
 						outCh <- v
@@ -33,6 +33,7 @@ func fanIn(ctx context.Context, chans []chan int) chan int {
 		}
 
 		wg.Wait()
+		println("after wg.WAIT() ===")
 		close(outCh)
 	}()
 
@@ -64,7 +65,6 @@ func runFanIn() {
 				println("LOG ===> ctx.Done()")
 				return
 			case <-time.After(1 * time.Second):
-				println("default ==>")
 				for _, ch := range chans {
 					ch <- int(time.Now().UnixMilli())
 				}
@@ -75,15 +75,11 @@ func runFanIn() {
 
 Loop:
 	for {
-		select {
-		case v, ok := <-outCh:
-			if !ok {
-				break Loop
-			}
-			println(" outCh ==> ", v)
-		case <-ctx.Done():
+		v, ok := <-outCh
+		if !ok {
 			break Loop
 		}
+		println(" outCh ==> ", v)
 	}
 
 	println("END ==>")

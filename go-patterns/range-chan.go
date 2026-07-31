@@ -10,18 +10,17 @@ func rangeSimpleChan() {
 
 	go func() {
 		queue <- "one"
-		time.Sleep(1 * time.Second)
 		queue <- "two"
-		time.Sleep(1 * time.Second)
 		queue <- "three"
-		time.Sleep(1 * time.Second)
 		queue <- "last"
+		time.Sleep(1 * time.Second)
 		close(queue)
 	}()
 
 	for elem := range queue {
 		fmt.Println("simple chan - ", elem)
 	}
+	println("===END_rangeSimpleChan===")
 }
 
 func rangeBufferedChan() {
@@ -44,4 +43,5 @@ func rangeBufferedChan() {
 	for elem := range queue {
 		fmt.Println("buff chan - ", elem)
 	}
+	println("===END_rangeBufferedChan===")
 }
