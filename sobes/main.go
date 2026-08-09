@@ -6,36 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"sync"
 )
 
-func compareSlices[T any](s1, s2 []T) bool {
-	buf1, err := json.Marshal(s1)
-	if err != nil {
-		panic(err)
-	}
-	buf2, err := json.Marshal(s2)
-	if err != nil {
-		panic(err)
-	}
-	if len(buf1) != len(buf2) {
-		return false
-	}
-	for i := range len(buf1) {
-		equal := buf1[i] == buf2[i]
-		if !equal {
-			return false
-		}
-	}
-	return true
-}
-
 func main() {
-	s1 := []EmptyResp{{Data: []int{223, 22, 35}}}
-	s2 := []EmptyResp{{Data: []int{223, 22, 35}}}
-	log.Println(compareSlices(s1, s2))
 	// checkEmptySlice()
 	// fanOut()
 	// customMutex()
