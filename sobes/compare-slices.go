@@ -39,11 +39,11 @@ func (bo *BaseObject) MovementState() IMovementState {
 }
 
 type NpcObject struct {
-	BaseObject
+	*BaseObject
 }
 
 func NewNpcObject() *NpcObject {
-	return &NpcObject{}
+	return &NpcObject{BaseObject: &BaseObject{}}
 }
 
 // =========================
