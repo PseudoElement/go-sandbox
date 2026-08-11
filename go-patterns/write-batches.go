@@ -22,7 +22,7 @@ func main_writeBatches() {
 	idx := 0
 	for {
 		idx++
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 		str := fmt.Sprintf("Click-%d", idx)
 		event := UserEvent{"user-event", []byte(str)}
 		fmt.Println("Event created", event)
