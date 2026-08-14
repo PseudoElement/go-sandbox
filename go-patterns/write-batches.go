@@ -4,29 +4,32 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 )
 
 func main_writeBatches() {
 	eventDispatcher := NewEventDispatcher(5)
-	// go eventDispatcher.Listen(context.TODO())
-	go eventDispatcher.ListenWithBufferedChan(context.TODO())
-	go func() {
-		time.Sleep(2 * time.Second)
-		eventDispatcher.AddConsumer("127.0.0.3:8081")
-	}()
+	go eventDispatcher.Listen(context.TODO())
+	// go eventDispatcher.ListenWithBufferedChan(context.TODO())
+	// go func() {
+	// 	time.Sleep(2 * time.Second)
+	// 	eventDispatcher.AddConsumer("127.0.0.3:8081")
+	// }()
 
-	// eventDispatcher.AddConsumer("127.0.0.1:8080")
+	eventDispatcher.AddConsumer("127.0.0.1:8080")
 	// eventDispatcher.AddConsumer("127.0.0.2:8080")
 
 	idx := 0
 	for {
 		idx++
-		time.Sleep(100 * time.Millisecond)
-		str := fmt.Sprintf("Click-%d", idx)
-		event := UserEvent{"user-event", []byte(str)}
-		fmt.Println("Event created", event)
-		eventDispatcher.SendEvent(event)
+		time.Sleep(2 * time.Second)
+		for counter := range 5 {
+			str := fmt.Sprintf("Click-%d", idx*counter)
+			event := UserEvent{"user-event", []byte(str)}
+			fmt.Println("Event created", event)
+			go eventDispatcher.SendEvent(event)
+		}
 	}
 }
 
@@ -57,6 +60,7 @@ type EventsDispatcher struct {
 	destinations           []string
 	simpleListenerActive   bool
 	bufferedListenerActive bool
+	mu                     *sync.Mutex
 }
 
 func NewEventDispatcher(batchSize int) *EventsDispatcher {
@@ -68,6 +72,7 @@ func NewEventDispatcher(batchSize int) *EventsDispatcher {
 		destinations:           make([]string, 0),
 		simpleListenerActive:   false,
 		bufferedListenerActive: false,
+		mu:                     &sync.Mutex{},
 	}
 }
 
@@ -78,7 +83,11 @@ func (ed *EventsDispatcher) AddConsumer(addr string) {
 func (ed *EventsDispatcher) SendEvent(event UserEvent) {
 	if ed.bufferedListenerActive {
 		ed.eventQueueChan <- event
+		return
 	}
+
+	ed.mu.Lock()
+	defer ed.mu.Unlock()
 	if ed.simpleListenerActive {
 		ed.eventQueue = append(ed.eventQueue, event)
 		if len(ed.eventQueue) >= ed.batchSize {
@@ -108,7 +117,9 @@ func (ed *EventsDispatcher) ListenWithBufferedChan(ctx context.Context) error {
 }
 
 func (ed *EventsDispatcher) Listen(ctx context.Context) error {
+	ed.mu.Lock()
 	ed.simpleListenerActive = true
+	ed.mu.Unlock()
 	for {
 		select {
 		case <-ctx.Done():
@@ -119,7 +130,10 @@ func (ed *EventsDispatcher) Listen(ctx context.Context) error {
 			for _, addr := range ed.destinations {
 				go sendDataSomewhere(context.TODO(), addr, batch)
 			}
+
+			ed.mu.Lock()
 			ed.eventQueue = ed.eventQueue[int(lastIdx):]
+			ed.mu.Unlock()
 		}
 	}
 }

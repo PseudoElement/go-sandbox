@@ -16,6 +16,10 @@ func runWPool() {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
+	mu := sync.RWMutex{}
+
+	mu.RLock()
+
 	go func() {
 		for idx := range 100 {
 			time.Sleep(1 * time.Millisecond)
