@@ -1,7 +1,9 @@
 package main
 
-func main() {
+import "github.com/pseudoelement/go-sandbox/db"
 
+func main() {
+	db.TestConcurrentUpdatesUnlocked()
 }
 
 // func main() {
