@@ -1,11 +1,11 @@
 package db
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -13,24 +13,64 @@ import (
 
 func TestConcurrentUpdatesUnlocked() {
 	db := runDB()
-	var paymentRow SchemaPayment
-	err := db.QueryRow("SELECT * FROM payments WHERE id=$1", 3).Scan(
-		&paymentRow.PaymentId,
-		&paymentRow.PersonId,
-		&paymentRow.CreatedAt,
-		&paymentRow.Amount)
-	if err != nil {
-		panic("[TestConcurrentUpdatesUnlocked] QueryRow err: " + err.Error())
-	}
+	sendUpdateQueryUnlocked(db)
+	// workersCount := 300
+	// errChan := make(chan error, workersCount)
+	// wg := sync.WaitGroup{}
 
-	fmt.Printf("Payment row: %+v \n", paymentRow)
+	// go func() {
+	// 	wg.Wait()
+	// 	close(errChan)
+	// }()
+
+	// for range workersCount {
+	// 	wg.Add(1)
+	// 	go func() {
+	// 		if err := sendUpdateQuery(db); err != nil {
+	// 			errChan <- err
+	// 		}
+	// 		wg.Done()
+	// 	}()
+	// }
+
+	// for err := range errChan {
+	// 	log.Println("[errChan] error:", err)
+	// }
 }
 
 func TestConcurrentUpdatesRowLocked() {}
 
 func TestConcurrentUpdatesTableLocked() {}
 
-func TestConcurrentUpdatesMutexLocked() {}
+func TestConcurrentUpdatesMutexLocked() {
+	db := runDB()
+	workersCount := 1000
+	errChan := make(chan error, workersCount)
+	wg := sync.WaitGroup{}
+	mu := sync.Mutex{}
+
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	for range workersCount {
+		wg.Add(1)
+		go func() {
+			mu.Lock()
+			err := sendUpdateQueryUnlocked(db)
+			mu.Unlock()
+			if err != nil {
+				errChan <- err
+			}
+			wg.Done()
+		}()
+	}
+
+	for err := range errChan {
+		log.Println("[errChan] error:", err)
+	}
+}
 
 func runDB() *sql.DB {
 	err := godotenv.Load("./db/.env")
@@ -68,21 +108,50 @@ func runDB() *sql.DB {
 	return db
 }
 
-func sendUpdateQuery(db *sql.DB) {
-	tx, err := db.BeginTx(
-		context.TODO(),
-		&sql.TxOptions{Isolation: sql.LevelReadUncommitted},
-	)
+func sendUpdateQueryUnlocked(db *sql.DB) error {
+	id := 8
+	res, err := NewQueryBuilder[SchemaPayment](db).
+		Begin().
+		Query("UPDATE payments SET amount = amount + 1 WHERE id = $1;", id).
+		QueryRow("SELECT * from payments WHERE id = $1;", id).
+		QueryRows("SELECT * from payments;").
+		Results()
+
 	if err != nil {
-		log.Fatal("[sendConcurrentUpdates] BeginTx err: " + err.Error())
+		log.Println("ERROR: ==>", err)
+		return err
 	}
-	id := 37
-	_, execErr := tx.Exec(`UPDATE users SET status = ? WHERE id = ?`, "paid", id)
-	if execErr != nil {
-		_ = tx.Rollback()
-		log.Fatal(execErr)
-	}
-	if err := tx.Commit(); err != nil {
-		log.Fatal(err)
-	}
+
+	log.Println("Tx done. Results is ", res)
+	return nil
 }
+
+// func sendUpdateQuery(db *sql.DB) error {
+// 	tx, err := db.BeginTx(
+// 		context.TODO(),
+// 		&sql.TxOptions{Isolation: sql.LevelReadCommitted},
+// 	)
+// 	if err != nil {
+// 		return fmt.Errorf("[sendUpdateQuery] BeginTx err: %w", err)
+// 	}
+// 	id := 2
+// 	_, execErr := tx.Exec(`UPDATE payments SET amount = amount + 1 WHERE id = $1;`, id)
+// 	if execErr != nil {
+// 		_ = tx.Rollback()
+// 		return fmt.Errorf("[sendUpdateQuery] tx.Exec err: %w", execErr)
+// 	}
+
+// 	var amount int
+// 	err = tx.QueryRow("SELECT amount from payments WHERE id = $1;", id).Scan(&amount)
+// 	if err != nil {
+// 		_ = tx.Rollback()
+// 		return fmt.Errorf("[sendUpdateQuery] tx.QueryRow err: %w", err)
+// 	}
+// 	if err := tx.Commit(); err != nil {
+// 		_ = tx.Rollback()
+// 		return fmt.Errorf("[sendUpdateQuery] tx.Commit err: %w", err)
+// 	}
+
+// 	log.Println("Tx done. Updated amount is ", amount)
+// 	return nil
+// }

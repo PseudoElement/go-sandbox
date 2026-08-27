@@ -4,6 +4,7 @@ import "github.com/pseudoelement/go-sandbox/db"
 
 func main() {
 	db.TestConcurrentUpdatesUnlocked()
+	// db.TestConcurrentUpdatesMutexLocked()
 }
 
 // func main() {
