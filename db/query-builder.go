@@ -10,28 +10,55 @@ import (
 
 var (
 	ErrNotInitialized = errors.New("db.BeginTx should be called first.")
+	ErrOutOfBound     = errors.New("idx is out of results size.")
 )
 
 type QueryBuilder[T any] struct {
-	db      *sql.DB
-	tx      *sql.Tx
-	err     error
-	res     T
-	results []T
+	db               *sql.DB
+	tx               *sql.Tx
+	err              error
+	resultsQueryRow  []T
+	resultsQueryRows [][]T
+	commited         bool
 }
 
 func NewQueryBuilder[T any](db *sql.DB) *QueryBuilder[T] {
-	return &QueryBuilder[T]{db: db, tx: nil, err: nil, results: make([]T, 0)}
+	return &QueryBuilder[T]{
+		db:               db,
+		tx:               nil,
+		err:              nil,
+		resultsQueryRow:  make([]T, 0),
+		resultsQueryRows: make([][]T, 0),
+		commited:         false,
+	}
 }
 
-func (qb *QueryBuilder[T]) Results() ([]T, error) {
-	err := qb._commit()
-	return qb.results, err
+func (qb *QueryBuilder[T]) ResultRows(idx uint8) ([]T, error) {
+	if qb.err != nil {
+		return []T{}, qb.err
+	}
+	if int(idx) > len(qb.resultsQueryRows)-1 {
+		return []T{}, ErrOutOfBound
+	}
+	if !qb.commited {
+		qb.err = qb._commit()
+		qb.commited = true
+	}
+	return qb.resultsQueryRows[idx], qb.err
 }
 
-func (qb *QueryBuilder[T]) Result() (T, error) {
-	err := qb._commit()
-	return qb.res, err
+func (qb *QueryBuilder[T]) ResultRow(idx uint8) (T, error) {
+	if qb.err != nil {
+		return *new(T), qb.err
+	}
+	if int(idx) > len(qb.resultsQueryRow)-1 {
+		return *new(T), ErrOutOfBound
+	}
+	if !qb.commited {
+		qb.err = qb._commit()
+		qb.commited = true
+	}
+	return qb.resultsQueryRow[idx], qb.err
 }
 
 func (qb *QueryBuilder[T]) Begin() *QueryBuilder[T] {
@@ -63,7 +90,7 @@ func (qb *QueryBuilder[T]) QueryRows(query string, args ...any) *QueryBuilder[T]
 		query,
 		args...,
 	)
-	qb.results = results
+	qb.resultsQueryRows = append(qb.resultsQueryRows, results)
 
 	return qb
 }
@@ -78,7 +105,9 @@ func (qb *QueryBuilder[T]) QueryRow(query string, args ...any) *QueryBuilder[T] 
 		query,
 		args...,
 	)
-	qb.res = results[0]
+	if len(results) > 0 {
+		qb.resultsQueryRow = append(qb.resultsQueryRow, results[0])
+	}
 
 	return qb
 }
@@ -101,16 +130,17 @@ func (qb *QueryBuilder[T]) _queryRows(stopFn func([]T) bool, query string, args 
 	rows, err := qb.tx.Query(query, args...)
 	if err != nil {
 		qb.err = err
-		return nil
+		return []T{}
 	}
 	defer rows.Close()
 
 	columnNames, err := rows.Columns()
 	if err != nil {
 		qb.err = err
-		return nil
+		return []T{}
 	}
-	structPtr := reflect.New(reflect.TypeOf(qb.res))
+	var res T
+	structPtr := reflect.New(reflect.TypeOf(res))
 	structVal := structPtr.Elem()
 	results := make([]T, 0)
 	for rows.Next() {
@@ -120,7 +150,7 @@ func (qb *QueryBuilder[T]) _queryRows(stopFn func([]T) bool, query string, args 
 		}
 		if err := rows.Scan(pointers...); err != nil {
 			qb.err = err
-			return nil
+			return []T{}
 		}
 		res := structVal.Interface().(T)
 		results = append(results, res)
@@ -134,7 +164,7 @@ func (qb *QueryBuilder[T]) _queryRows(stopFn func([]T) bool, query string, args 
 }
 
 func (qb *QueryBuilder[T]) _checkTxNonNil() {
-	if qb.tx == nil {
+	if qb.err == nil && qb.tx == nil {
 		qb.err = ErrNotInitialized
 	}
 }

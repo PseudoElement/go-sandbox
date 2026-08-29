@@ -1,6 +1,6 @@
-package main
+package gopatterns
 
-func main() {
+func Main() {
 	main_writeBatches()
 	// runWorkerPool()
 	// runFanIn()

@@ -1,51 +1,119 @@
 package db
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	gopatterns "github.com/pseudoelement/go-sandbox/go-patterns"
 )
 
+const WORKERS_COUNT int = 3_000
+
+var sem *gopatterns.Semaphore = gopatterns.NewSemaphore(context.TODO(), 20)
+
+/**
+ * 3000 workers: avg 3834.75
+ */
 func TestConcurrentUpdatesUnlocked() {
 	db := runDB()
-	sendUpdateQueryUnlocked(db)
-	// workersCount := 300
-	// errChan := make(chan error, workersCount)
-	// wg := sync.WaitGroup{}
+	errChan := make(chan error, WORKERS_COUNT)
+	wg := sync.WaitGroup{}
 
-	// go func() {
-	// 	wg.Wait()
-	// 	close(errChan)
-	// }()
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
 
-	// for range workersCount {
-	// 	wg.Add(1)
-	// 	go func() {
-	// 		if err := sendUpdateQuery(db); err != nil {
-	// 			errChan <- err
-	// 		}
-	// 		wg.Done()
-	// 	}()
-	// }
+	now := time.Now()
+	for range WORKERS_COUNT {
+		wg.Add(1)
+		go func() {
+			if err := _sendUpdateQuery(db); err != nil {
+				errChan <- err
+			}
+			wg.Done()
+		}()
+	}
 
-	// for err := range errChan {
-	// 	log.Println("[errChan] error:", err)
-	// }
+	for err := range errChan {
+		log.Println("[errChan] error:", err)
+	}
+	log.Println("Time: ", time.Since(now).Milliseconds())
 }
 
-func TestConcurrentUpdatesRowLocked() {}
+/**
+ * 3000 workers: avg 5049.25
+ */
+func TestConcurrentUpdatesRowLocked() {
+	db := runDB()
+	errChan := make(chan error, WORKERS_COUNT)
+	wg := sync.WaitGroup{}
 
-func TestConcurrentUpdatesTableLocked() {}
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
 
+	now := time.Now()
+	for range WORKERS_COUNT {
+		wg.Add(1)
+		go func() {
+			if err := _sendUpdateQueryRowLocked(db); err != nil {
+				errChan <- err
+			}
+			wg.Done()
+		}()
+	}
+
+	for err := range errChan {
+		log.Println("[errChan] error:", err)
+	}
+	log.Println("Time: ", time.Since(now).Milliseconds())
+}
+
+/**
+ * 3000 workers: avg 3944
+ */
+func TestConcurrentUpdatesTableLocked() {
+	db := runDB()
+	errChan := make(chan error, WORKERS_COUNT)
+	wg := sync.WaitGroup{}
+
+	go func() {
+		wg.Wait()
+		close(errChan)
+	}()
+
+	now := time.Now()
+	for range WORKERS_COUNT {
+		wg.Add(1)
+		go func() {
+			if err := _sendUpdateQueryAccessExclusive(db); err != nil {
+				errChan <- err
+			}
+			wg.Done()
+		}()
+	}
+
+	for err := range errChan {
+		log.Println("[errChan] error:", err)
+	}
+	log.Println("Time: ", time.Since(now).Milliseconds())
+}
+
+/**
+ * 3000 workers: avg 4129.5
+ */
 func TestConcurrentUpdatesMutexLocked() {
 	db := runDB()
-	workersCount := 1000
-	errChan := make(chan error, workersCount)
+	errChan := make(chan error, WORKERS_COUNT)
 	wg := sync.WaitGroup{}
 	mu := sync.Mutex{}
 
@@ -54,11 +122,12 @@ func TestConcurrentUpdatesMutexLocked() {
 		close(errChan)
 	}()
 
-	for range workersCount {
+	now := time.Now()
+	for range WORKERS_COUNT {
 		wg.Add(1)
 		go func() {
 			mu.Lock()
-			err := sendUpdateQueryUnlocked(db)
+			err := _sendUpdateQuery(db)
 			mu.Unlock()
 			if err != nil {
 				errChan <- err
@@ -70,6 +139,7 @@ func TestConcurrentUpdatesMutexLocked() {
 	for err := range errChan {
 		log.Println("[errChan] error:", err)
 	}
+	log.Println("Time: ", time.Since(now).Milliseconds())
 }
 
 func runDB() *sql.DB {
@@ -97,6 +167,7 @@ func runDB() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
+	db.SetMaxOpenConns(50)
 
 	err = db.Ping()
 	if err != nil {
@@ -108,21 +179,50 @@ func runDB() *sql.DB {
 	return db
 }
 
-func sendUpdateQueryUnlocked(db *sql.DB) error {
+func _sendUpdateQuery(db *sql.DB) error {
 	id := 8
-	res, err := NewQueryBuilder[SchemaPayment](db).
+	row, err := NewQueryBuilder[SchemaPayment](db).
 		Begin().
 		Query("UPDATE payments SET amount = amount + 1 WHERE id = $1;", id).
 		QueryRow("SELECT * from payments WHERE id = $1;", id).
-		QueryRows("SELECT * from payments;").
-		Results()
-
+		ResultRow(0)
 	if err != nil {
-		log.Println("ERROR: ==>", err)
 		return err
 	}
 
-	log.Println("Tx done. Results is ", res)
+	log.Println("Tx done. Row is ", row)
+	return nil
+}
+
+func _sendUpdateQueryRowLocked(db *sql.DB) error {
+	id := 8
+	row, err := NewQueryBuilder[SchemaPayment](db).
+		Begin().
+		Query("SELECT amount FROM payments WHERE id = $1 FOR UPDATE;", id).
+		Query("UPDATE payments SET amount = amount + 1 WHERE id = $1;", id).
+		QueryRow("SELECT * from payments WHERE id = $1;", id).
+		ResultRow(0)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Tx done. Row is ", row)
+	return nil
+}
+
+func _sendUpdateQueryAccessExclusive(db *sql.DB) error {
+	id := 8
+	row, err := NewQueryBuilder[SchemaPayment](db).
+		Begin().
+		Query("LOCK TABLE payments IN ACCESS EXCLUSIVE MODE;").
+		Query("UPDATE payments SET amount = amount + 1 WHERE id = $1;", id).
+		QueryRow("SELECT * from payments WHERE id = $1;", id).
+		ResultRow(0)
+	if err != nil {
+		return err
+	}
+
+	log.Println("Tx done. Row is ", row)
 	return nil
 }
 

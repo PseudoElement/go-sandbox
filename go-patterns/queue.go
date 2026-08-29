@@ -1,4 +1,4 @@
-package main
+package gopatterns
 
 type Queue[T comparable] struct {
 	queue []T

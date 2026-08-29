@@ -1,10 +1,14 @@
 package main
 
-import "github.com/pseudoelement/go-sandbox/db"
+import (
+	"github.com/pseudoelement/go-sandbox/db"
+)
 
 func main() {
 	db.TestConcurrentUpdatesUnlocked()
 	// db.TestConcurrentUpdatesMutexLocked()
+	// db.TestConcurrentUpdatesTableLocked()
+	// db.TestConcurrentUpdatesRowLocked()
 }
 
 // func main() {
