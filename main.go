@@ -5,10 +5,10 @@ import (
 )
 
 func main() {
-	db.TestConcurrentUpdatesUnlocked()
+	// db.TestConcurrentUpdatesUnlocked()
 	// db.TestConcurrentUpdatesMutexLocked()
 	// db.TestConcurrentUpdatesTableLocked()
-	// db.TestConcurrentUpdatesRowLocked()
+	db.TestConcurrentUpdatesRowLocked()
 }
 
 // func main() {

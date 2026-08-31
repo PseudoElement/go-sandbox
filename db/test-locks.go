@@ -14,9 +14,9 @@ import (
 	gopatterns "github.com/pseudoelement/go-sandbox/go-patterns"
 )
 
-const WORKERS_COUNT int = 3_000
+const WORKERS_COUNT int = 3000
 
-var sem *gopatterns.Semaphore = gopatterns.NewSemaphore(context.TODO(), 20)
+var sem *gopatterns.Semaphore = gopatterns.NewSemaphore(context.TODO(), 10)
 
 /**
  * 3000 workers: avg 3834.75
@@ -35,7 +35,12 @@ func TestConcurrentUpdatesUnlocked() {
 	for range WORKERS_COUNT {
 		wg.Add(1)
 		go func() {
-			if err := _sendUpdateQuery(db); err != nil {
+			options := RetryOptions{
+				RetryCount:         5,
+				DefaultDelayMs:     100,
+				ErrorCodesForRetry: []string{"40001"},
+			}
+			if err := retry(func() error { return _sendUpdateQuery(db) }, options); err != nil {
 				errChan <- err
 			}
 			wg.Done()
@@ -126,12 +131,16 @@ func TestConcurrentUpdatesMutexLocked() {
 	for range WORKERS_COUNT {
 		wg.Add(1)
 		go func() {
+			options := RetryOptions{
+				RetryCount:         5,
+				DefaultDelayMs:     100,
+				ErrorCodesForRetry: []string{"40001"},
+			}
 			mu.Lock()
-			err := _sendUpdateQuery(db)
-			mu.Unlock()
-			if err != nil {
+			if err := retry(func() error { return _sendUpdateQuery(db) }, options); err != nil {
 				errChan <- err
 			}
+			mu.Unlock()
 			wg.Done()
 		}()
 	}
@@ -183,7 +192,13 @@ func _sendUpdateQuery(db *sql.DB) error {
 	id := 8
 	row, err := NewQueryBuilder[SchemaPayment](db).
 		Begin().
-		Query("UPDATE payments SET amount = amount + 1 WHERE id = $1;", id).
+		Query(`
+			UPDATE payments SET amount = subquery.amount + 1
+			FROM (
+				SELECT amount FROM payments
+				WHERE id = $1
+			) AS subquery
+			WHERE id = $1;`, id).
 		QueryRow("SELECT * from payments WHERE id = $1;", id).
 		ResultRow(0)
 	if err != nil {
@@ -199,7 +214,13 @@ func _sendUpdateQueryRowLocked(db *sql.DB) error {
 	row, err := NewQueryBuilder[SchemaPayment](db).
 		Begin().
 		Query("SELECT amount FROM payments WHERE id = $1 FOR UPDATE;", id).
-		Query("UPDATE payments SET amount = amount + 1 WHERE id = $1;", id).
+		Query(`
+			UPDATE payments SET amount = subquery.amount + 1
+			FROM (
+				SELECT amount FROM payments
+				WHERE id = $1
+			) AS subquery
+			WHERE id = $1;`, id).
 		QueryRow("SELECT * from payments WHERE id = $1;", id).
 		ResultRow(0)
 	if err != nil {
@@ -215,7 +236,13 @@ func _sendUpdateQueryAccessExclusive(db *sql.DB) error {
 	row, err := NewQueryBuilder[SchemaPayment](db).
 		Begin().
 		Query("LOCK TABLE payments IN ACCESS EXCLUSIVE MODE;").
-		Query("UPDATE payments SET amount = amount + 1 WHERE id = $1;", id).
+		Query(`
+			UPDATE payments SET amount = subquery.amount + 1
+			FROM (
+				SELECT amount FROM payments
+				WHERE id = $1
+			) AS subquery
+			WHERE id = $1;`, id).
 		QueryRow("SELECT * from payments WHERE id = $1;", id).
 		ResultRow(0)
 	if err != nil {
@@ -225,33 +252,3 @@ func _sendUpdateQueryAccessExclusive(db *sql.DB) error {
 	log.Println("Tx done. Row is ", row)
 	return nil
 }
-
-// func sendUpdateQuery(db *sql.DB) error {
-// 	tx, err := db.BeginTx(
-// 		context.TODO(),
-// 		&sql.TxOptions{Isolation: sql.LevelReadCommitted},
-// 	)
-// 	if err != nil {
-// 		return fmt.Errorf("[sendUpdateQuery] BeginTx err: %w", err)
-// 	}
-// 	id := 2
-// 	_, execErr := tx.Exec(`UPDATE payments SET amount = amount + 1 WHERE id = $1;`, id)
-// 	if execErr != nil {
-// 		_ = tx.Rollback()
-// 		return fmt.Errorf("[sendUpdateQuery] tx.Exec err: %w", execErr)
-// 	}
-
-// 	var amount int
-// 	err = tx.QueryRow("SELECT amount from payments WHERE id = $1;", id).Scan(&amount)
-// 	if err != nil {
-// 		_ = tx.Rollback()
-// 		return fmt.Errorf("[sendUpdateQuery] tx.QueryRow err: %w", err)
-// 	}
-// 	if err := tx.Commit(); err != nil {
-// 		_ = tx.Rollback()
-// 		return fmt.Errorf("[sendUpdateQuery] tx.Commit err: %w", err)
-// 	}
-
-// 	log.Println("Tx done. Updated amount is ", amount)
-// 	return nil
-// }
