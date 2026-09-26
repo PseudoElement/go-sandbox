@@ -14,6 +14,7 @@ func main() {
 	// checkEmptySlice()
 	// fanOut()
 	// customMutex()
+	main_processor()
 }
 
 type EmptyResp struct {
