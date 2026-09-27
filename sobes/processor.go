@@ -48,52 +48,47 @@ func main_processor() {
 	balances := map[UserID]int{
 		"1": 100000,
 		"2": 100000,
-		"3": 200000,
-		"4": 300000,
+		"3": 100000,
+		"4": 100000,
 	}
 	inbox := make(chan Transaction)
 	processor := NewProcessor(4, balances)
-	// ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	// ctx2, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	ctx2, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	go func() {
-		for {
+		for range 10 {
 			for _, tx := range txs {
-				inbox <- tx
+				select {
+				case <-ctx.Done():
+					close(inbox)
+					return
+				default:
+					inbox <- tx
+				}
 			}
 			time.Sleep(2 * time.Second)
 		}
 	}()
 
-Loop:
-	for {
-		select {
-		case <-ctx.Done():
-			break Loop
-		case tx := <-inbox:
+	go func() {
+		for tx := range inbox {
 			go func() {
 				if err := processor.Submit(ctx2, tx); err != nil {
 					fmt.Printf("[%s] err: %v\n", tx.UserID, err)
 				} else {
+					// fmt.Println("balances ==>", balances)
 					fmt.Printf("[%s] submitted\n", tx.UserID)
 				}
 			}()
 		}
-	}
+	}()
 
 	<-ctx.Done()
 
 	log.Println("Server is shutting down...")
-	wg := sync.WaitGroup{}
-	for range 100 {
-		wg.Add(1)
-		go func() {
-			processor.Shutdown()
-			wg.Done()
-		}()
-	}
-	wg.Wait()
+	processor.Shutdown()
 	log.Println("Server exited cleanly!")
 }
 
@@ -106,15 +101,15 @@ type Transaction struct {
 }
 
 type PendingUser struct {
-	operation func() error
-	ch        chan struct{}
+	pendingCount atomic.Int32
+	ch           chan struct{}
 }
 
 type Processor struct {
 	shutdownInProcess atomic.Bool
 	balances          map[UserID]int
 	mu                sync.Mutex
-	pendingUsers      map[UserID]PendingUser
+	pendingUsers      map[UserID]*PendingUser
 	db                *DB
 	sem               *gopatterns.Semaphore
 }
@@ -124,7 +119,7 @@ func NewProcessor(workers int, balances map[UserID]int) *Processor {
 		shutdownInProcess: atomic.Bool{},
 		db:                &DB{},
 		balances:          balances,
-		pendingUsers:      make(map[UserID]PendingUser),
+		pendingUsers:      make(map[UserID]*PendingUser),
 		sem:               gopatterns.NewSemaphore(context.TODO(), workers),
 	}
 }
@@ -139,12 +134,12 @@ func (p *Processor) Submit(ctx context.Context, tx Transaction) error {
 	p.mu.Lock()
 	user, ok := p.pendingUsers[UserID(tx.UserID)]
 	if !ok {
-		user = PendingUser{
-			ch: make(chan struct{}, 1),
+		user = &PendingUser{
+			ch:           make(chan struct{}, 1),
+			pendingCount: atomic.Int32{},
 		}
 		p.pendingUsers[UserID(tx.UserID)] = user
 	}
-	user.operation = func() error { return p._process(tx) }
 	p.mu.Unlock()
 
 	err = p._wait(ctx, user, func() error {
@@ -177,7 +172,10 @@ func (p *Processor) _process(tx Transaction) error {
 	return nil
 }
 
-func (p *Processor) _wait(ctx context.Context, user PendingUser, process func() error) error {
+func (p *Processor) _wait(ctx context.Context, user *PendingUser, process func() error) error {
+	user.pendingCount.Add(1)
+	defer user.pendingCount.Add(-1)
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -193,21 +191,50 @@ func (p *Processor) Shutdown() {
 		return
 	}
 	println("Processor Shutdown started...")
+
 	p.mu.Lock()
-	defer p.mu.Unlock()
+	pendingUsers := copyMap(p.pendingUsers)
+	p.mu.Unlock()
+
+	m := sync.RWMutex{}
+	m.RLock()
+
+	fmt.Printf("1_pointer_pendingUsers ==> %p \n", pendingUsers)
+	// p._waitPendingUsersFromBorrow(pendingUsers)
+	p._waitPendingUsersFromSintol(pendingUsers)
+	println("Processor Shutdown completed!")
+}
+
+/**
+ * can skip several _wait() in queue
+ */
+func (p *Processor) _waitPendingUsersFromSintol(pendingUsers map[UserID]*PendingUser) {
 	wg := sync.WaitGroup{}
-	for _, user := range p.pendingUsers {
+	for _, user := range pendingUsers {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			time.Sleep(2 * time.Second)
-			if err := user.operation(); err != nil {
-				p.db.Query("INSERT into ops_errors...")
-			} else {
-				p.db.Query("UPDATE ops...")
+			if user.pendingCount.Load() > 0 {
+				user.ch <- struct{}{}
 			}
 		}()
 	}
 	wg.Wait()
-	println("Processor Shutdown completed!")
+}
+
+/**
+ * every time everything is processed
+ */
+func (p *Processor) _waitPendingUsersFromBorrow(pendingUsers map[UserID]*PendingUser) {
+	fmt.Printf("2_pointer_pendingUsers ==> %p \n", pendingUsers)
+OuterLoop:
+	for userID, _ := range pendingUsers {
+		for {
+			time.Sleep(1 * time.Millisecond)
+			user := pendingUsers[userID]
+			if user.pendingCount.Load() == 0 {
+				continue OuterLoop
+			}
+		}
+	}
 }
